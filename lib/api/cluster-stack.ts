@@ -1,7 +1,5 @@
 import { Construct } from 'constructs';
-import { Environment, getNamespace } from '../config';
 import {
-    aws_certificatemanager,
     CfnOutput,
     Duration,
     Stack,
@@ -11,11 +9,12 @@ import {
     aws_ecs as ecs,
     aws_ec2 as ec2,
 } from 'aws-cdk-lib';
+import { AppEnvironment, getNamespace } from '../app-env';
 
 export interface ClusterStackProps extends StackProps {
     cidr: string;
     maxAZs: number;
-    appEnv: Environment;
+    appEnv: AppEnvironment;
 }
 
 export class ClusterStack extends Stack {

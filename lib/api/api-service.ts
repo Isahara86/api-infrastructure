@@ -14,9 +14,8 @@ import {
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Artifact } from 'aws-cdk-lib/aws-codepipeline';
-import { AppEnvironment } from '../app-env';
-import { PipelineContainerImage } from '../infrastructure/cdk/lib/pipeline-container-image';
-import { DEFAULT_SERVICE_PORT, SSM_IMAGE_TAG_PARAM_NAME } from '../infrastructure/cdk/config';
+import { AppEnvironment, DEFAULT_SERVICE_PORT, SSM_IMAGE_TAG_PARAM_NAME } from '../app-env';
+import { PipelineContainerImage } from './pipeline-container-image';
 
 export interface AppStackProps extends StackProps {
     vpc: ec2.Vpc;

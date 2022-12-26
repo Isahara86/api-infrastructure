@@ -6,28 +6,12 @@ import {
     Duration,
     aws_codebuild,
     aws_iam as iam,
-    aws_elasticloadbalancingv2,
-    aws_ec2 as ec2,
-    aws_ecs as ecs,
 } from 'aws-cdk-lib';
 import { Artifact } from 'aws-cdk-lib/aws-codepipeline';
 import { aws_codepipeline, aws_codepipeline_actions } from 'aws-cdk-lib';
-import {
-    // API_REPO_NAME,
-    // AWS_SECRETS_GITHUB_TOKEN_NAME,
-    // DEFAULT_SERVICE_PORT,
-    // envBranches,
-    // Environment,
-    // getNamespace,
-    // GITHUB_OWNER,
-    // GRAPH_NAME,
-    SSM_IMAGE_TAG_PARAM_NAME,
-} from '../config';
 import { Construct } from 'constructs';
-import { AppEnvironment } from '../../../app-env';
+import { AppEnvironment, SSM_IMAGE_TAG_PARAM_NAME } from '../app-env';
 import { PipelineContainerImage } from './pipeline-container-image';
-
-// import { getSecretArn, secrets } from './secrets';
 
 export interface PipelineStackProps extends StackProps {
     repoRegion: string;
@@ -39,18 +23,13 @@ export interface PipelineStackProps extends StackProps {
 
 export class PipelineStack extends Stack {
     public readonly builtImage: PipelineContainerImage;
-    public readonly imageTag: string;
-    public readonly repository: aws_ecr.Repository;
+    private readonly repository: aws_ecr.Repository;
 
     constructor(scope: Construct, id: string, props: PipelineStackProps) {
-        super(scope, id, {
-            ...props,
-        });
-
+        super(scope, id, {...props});
 
         // const repoName = API_REPO_NAME;
         const {serviceName, appEnv, repoRegion, repoAccountId, serviceStackName} = props;
-
 
         const pipelineName = `${appEnv}-${serviceName}Pipeline`;
         const dockerBuildProject = `${appEnv}-${serviceName}DockerBuild`;
@@ -166,37 +145,37 @@ export class PipelineStack extends Stack {
         }));
 
         const cdkBuild = new aws_codebuild.PipelineProject(this, cdkBuildProject, {
-          timeout: Duration.minutes(10),
-          environment: {
-            buildImage: aws_codebuild.LinuxBuildImage.STANDARD_6_0,
-          },
-          buildSpec: aws_codebuild.BuildSpec.fromObject({
-            version: '0.2',
-            phases: {
-                install: {
-                    'runtime-versions': {
-                        nodejs: '16.x',
+            timeout: Duration.minutes(10),
+            environment: {
+                buildImage: aws_codebuild.LinuxBuildImage.STANDARD_6_0,
+            },
+            buildSpec: aws_codebuild.BuildSpec.fromObject({
+                version: '0.2',
+                phases: {
+                    install: {
+                        'runtime-versions': {
+                            nodejs: '16.x',
+                        },
+                        commands: [
+                            'npm install',
+                        ]
                     },
-                    commands: [
-                        'npm install',
-                    ]
+                    build: {
+                        commands: ['npm run build', `npm run cdk synth -- -o .`],
+                    },
                 },
-              build: {
-                commands: ['npm run build', `npm run cdk synth -- -o .`],
-              },
-            },
-            artifacts: {
-              //  important to have same name as a service unless deploy will not find .template.json
-              files: `${serviceStackName}.template.json`,
-            },
-          }),
+                artifacts: {
+                    //  important to have same name as a service unless deploy will not find .template.json
+                    files: `${serviceStackName}.template.json`,
+                },
+            }),
         });
         cdkBuild.addToRolePolicy(
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: ['ec2:DescribeAvailabilityZones'],
-            resources: ['*'],
-          }),
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['ec2:DescribeAvailabilityZones'],
+                resources: ['*'],
+            }),
         );
 
         const dockerBuildOutput = new Artifact('DockerBuildOutput');
@@ -208,7 +187,7 @@ export class PipelineStack extends Stack {
                     stageName: 'Source',
                     actions: [
                         sourceAction,
-                        // cdkSourceAction
+                        cdkSourceAction
                     ],
                 },
                 {
@@ -249,6 +228,5 @@ export class PipelineStack extends Stack {
             ],
         });
 
-        this.imageTag = dockerBuildOutput.getParam('imageTag.json', 'imageTag');
     }
 }

@@ -5,20 +5,9 @@ import {
     Stack,
     StackProps,
     Duration,
-    aws_ecr,
-    RemovalPolicy,
-    aws_codepipeline_actions,
-    aws_codebuild,
-    aws_iam as iam,
-    aws_codepipeline, App
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { DEFAULT_SERVICE_PORT, getNamespace, SSM_IMAGE_TAG_PARAM_NAME } from '../config';
-import { PipelineContainerImage } from './pipeline-container-image';
-import { Artifact } from 'aws-cdk-lib/aws-codepipeline';
-import { AppEnvironment } from '../../../app-env';
-
-// import { getSecretArn, IEnvVariables } from './secrets';
+import { AppEnvironment, DEFAULT_SERVICE_PORT } from '../app-env';
 
 export interface AppStackProps extends StackProps {
     vpc: ec2.Vpc;
